@@ -28,7 +28,6 @@ def bitbucketUser = System.getenv("BITBUCKET_USER")
 def bitbucketPassword = System.getenv("BITBUCKET_PASSWORD")
 def bitbucketProjectKey = System.getenv("BITBUCKET_PROJECT_KEY") ?: "rht-labs"
 def bitbucketProjectsApi = new URL("${bitbucketHost}/rest/api/1.0/projects/${bitbucketProjectKey}/repos?limit=100")
-//def bitbucketAuth = (bitbucketUser+":"+bitbucketPassword).getBytes().encodeBase64().toString();
 
 def createMultibranchPipelineJob(project, gitPath, jte) {
     def buildNamespace = System.getenv("BUILD_NAMESPACE") ?: "ocp-ci-cd"
