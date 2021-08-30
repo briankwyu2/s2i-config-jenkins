@@ -35,7 +35,6 @@ def createMultibranchPipelineJob(project, gitPath, jte) {
     def jteProject = System.getenv("JTE_PROJECT") ?: "https://gitlab.apps.proj.example.com/rht-labs/pipeline-template-configuration.git"
     def pipelineConfigDir = System.getenv("JTE_PIPELINE_DIR") ?: "pipeline-configuration"
     def librariesDir = System.getenv("JTE_LIBRARIES_DIR") ?: "libraries"
-    def credentialsId = System.getenv("SSH_ACCESS_KEY") ?: "Access-Key"
 
     // Build Jenkins multibranch jobs
     multibranchPipelineJob(project) {
@@ -43,7 +42,7 @@ def createMultibranchPipelineJob(project, gitPath, jte) {
             git {
                 id("${project}")
                 remote(gitPath)
-                credentialsId("${credentialsId}")
+                credentialsId("${buildNamespace}-${buildGitAuthSecret}")
             }
         }
         triggers {
@@ -242,7 +241,7 @@ if (gitlabToken) {
                 return
             }
     
-            // 1. Check for "${gitlabHost}/api/v4/projects/${it.id}/repository/files/pipeline_config.groovy?ref=master"
+            // 1. Check for "${bitbucketHost}/rest/api/1.0/projects/${bitbucketProjectKey}/repos/${repositorySlug}/browse/pipeline_config.groovy?ref=master"
                 // => JTE
             // 2. Check for Jenkinsfile
                 // => Jenkins classic
@@ -262,7 +261,7 @@ if (gitlabToken) {
             }
             catch(Exception e) {
                 println e
-                println "JTE pipeline_config.groovy not found in ${project}. Checking for Jenkinsfile...."
+                println "🤬 JTE pipeline_config.groovy not found in ${project} 👹. Checking for Jenkinsfile...."
             }
 
             try {
@@ -279,7 +278,7 @@ if (gitlabToken) {
             }
             catch(Exception e) {
                 println e
-                println "skipping project ${repositorySlug} because it has no Jenkinsfile \n"
+                println "🤬 Skipping project ${repositorySlug} because it has no Jenkinsfile 👹\n"
             }
         }
     } catch(Exception e) {
