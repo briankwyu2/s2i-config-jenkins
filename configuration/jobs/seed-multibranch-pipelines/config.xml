@@ -47,7 +47,6 @@
   <builders>
     <javaposse.jobdsl.plugin.ExecuteDslScripts plugin="job-dsl@1.77">
       <scriptText>
-#!/usr/bin/env groovy
 // Groovy script used to seed Jenkins with multi-branch pipeline jobs:
 // 1. Call GitLab API to get each git project in a given group
 // 2. Check if project is archived, if so skip it.
