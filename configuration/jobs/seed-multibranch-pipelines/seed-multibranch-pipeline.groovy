@@ -20,6 +20,7 @@ def githubToken = System.getenv("GITHUB_TOKEN")
 def githubAccount = System.getenv("GITHUB_ACCOUNT")
 def githubOrg = System.getenv("GITHUB_ORG") ?: false
 //eg  https://api.github.com/users/springdo/repos or 
+def githubProjects = githubOrg ? new URL("${githubHost}/orgs/${githubAccount}/repos?per_page=100") : new URL("${githubHost}/users/${githubAccount}/repos?per_page=100")
 
 // BITBUCKET
 def bitbucketHost = System.getenv("BITBUCKET_HOST") ?: "https://bitbucket.org/repo"
@@ -27,9 +28,7 @@ def bitbucketUser = System.getenv("BITBUCKET_USER")
 def bitbucketPassword = System.getenv("BITBUCKET_PASSWORD")
 def bitbucketProjectKey = System.getenv("BITBUCKET_PROJECT_KEY") ?: "rht-labs"
 def bitbucketProjectsApi = new URL("${bitbucketHost}/rest/api/1.0/projects/${bitbucketProjectKey}/repos?limit=100")
-def bitbucketAuth = (bitbucketUser+":"+bitbucketPassword).getBytes().encodeBase64().toString();
-
-def githubProjects = githubOrg ? new URL("${githubHost}/orgs/${githubAccount}/repos?per_page=100") : new URL("${githubHost}/users/${githubAccount}/repos?per_page=100")
+//def bitbucketAuth = (bitbucketUser+":"+bitbucketPassword).getBytes().encodeBase64().toString();
 
 def createMultibranchPipelineJob(project, gitPath, jte) {
     def buildNamespace = System.getenv("BUILD_NAMESPACE") ?: "ocp-ci-cd"
@@ -123,13 +122,13 @@ def createMultibranchPipelineJob(project, gitPath, jte) {
     }
 }
 
-
 def addJobToQueue(project){
   if (!jenkins.model.Jenkins.instance.getItemByFullName(project)) {
     print "About to create ${project} for the first time, this will result in a triggering the build after this run to prepare the ${project} pipeline\n\n"
     queue(project)
   }
 }
+
 // if GITLAB* set ....
 println "Before starting to scan bitbucket projects in ${bitbucketProjectsApi}"
 if (gitlabToken) {
@@ -223,7 +222,7 @@ if (gitlabToken) {
       print "\n\n Oops! something went wrong..... Try setting the GITHUB_* Env Vars \n\n\n"
       throw e
   }
-} else if (bitbucketAuth) {
+} else if (bitbucketHost) {
   try {
       def process = "curl -s -k -u ${bitbucketUser}:${bitbucketPassword} ${bitbucketProjectsApi}".execute()
       process.waitFor()
