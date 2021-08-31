@@ -20,16 +20,14 @@ def githubToken = System.getenv("GITHUB_TOKEN")
 def githubAccount = System.getenv("GITHUB_ACCOUNT")
 def githubOrg = System.getenv("GITHUB_ORG") ?: false
 //eg  https://api.github.com/users/springdo/repos or 
+def githubProjects = githubOrg ? new URL("${githubHost}/orgs/${githubAccount}/repos?per_page=100") : new URL("${githubHost}/users/${githubAccount}/repos?per_page=100")
 
 // BITBUCKET
 def bitbucketHost = System.getenv("BITBUCKET_HOST") ?: "https://bitbucket.org/repo"
-def bitbucketUser = System.getenv("BITBUCKET_USER")
-def bitbucketPassword = System.getenv("BITBUCKET_PASSWORD")
+def bitbucketUser = System.getenv("BITBUCKET_API_USER")
+def bitbucketPassword = System.getenv("BITBUCKET_API_PASSWORD")
 def bitbucketProjectKey = System.getenv("BITBUCKET_PROJECT_KEY") ?: "rht-labs"
 def bitbucketProjectsApi = new URL("${bitbucketHost}/rest/api/1.0/projects/${bitbucketProjectKey}/repos?limit=100")
-def bitbucketAuth = (bitbucketUser+":"+bitbucketPassword).getBytes().encodeBase64().toString();
-
-def githubProjects = githubOrg ? new URL("${githubHost}/orgs/${githubAccount}/repos?per_page=100") : new URL("${githubHost}/users/${githubAccount}/repos?per_page=100")
 
 def createMultibranchPipelineJob(project, gitPath, jte) {
     def buildNamespace = System.getenv("BUILD_NAMESPACE") ?: "ocp-ci-cd"
@@ -37,7 +35,6 @@ def createMultibranchPipelineJob(project, gitPath, jte) {
     def jteProject = System.getenv("JTE_PROJECT") ?: "https://gitlab.apps.proj.example.com/rht-labs/pipeline-template-configuration.git"
     def pipelineConfigDir = System.getenv("JTE_PIPELINE_DIR") ?: "pipeline-configuration"
     def librariesDir = System.getenv("JTE_LIBRARIES_DIR") ?: "libraries"
-    def credentialsId = System.getenv("SSH_ACCESS_KEY") ?: "Access-Key"
 
     // Build Jenkins multibranch jobs
     multibranchPipelineJob(project) {
@@ -45,7 +42,7 @@ def createMultibranchPipelineJob(project, gitPath, jte) {
             git {
                 id("${project}")
                 remote(gitPath)
-                credentialsId("${credentialsId}")
+                credentialsId("${buildNamespace}-${buildGitAuthSecret}")
             }
         }
         triggers {
@@ -123,13 +120,13 @@ def createMultibranchPipelineJob(project, gitPath, jte) {
     }
 }
 
-
 def addJobToQueue(project){
   if (!jenkins.model.Jenkins.instance.getItemByFullName(project)) {
     print "About to create ${project} for the first time, this will result in a triggering the build after this run to prepare the ${project} pipeline\n\n"
     queue(project)
   }
 }
+
 // if GITLAB* set ....
 println "Before starting to scan bitbucket projects in ${bitbucketProjectsApi}"
 if (gitlabToken) {
@@ -223,7 +220,7 @@ if (gitlabToken) {
       print "\n\n Oops! something went wrong..... Try setting the GITHUB_* Env Vars \n\n\n"
       throw e
   }
-} else if (bitbucketAuth) {
+} else if (bitbucketHost) {
   try {
       def process = "curl -s -k -u ${bitbucketUser}:${bitbucketPassword} ${bitbucketProjectsApi}".execute()
       process.waitFor()
@@ -244,7 +241,7 @@ if (gitlabToken) {
                 return
             }
     
-            // 1. Check for "${gitlabHost}/api/v4/projects/${it.id}/repository/files/pipeline_config.groovy?ref=master"
+            // 1. Check for "${bitbucketHost}/rest/api/1.0/projects/${bitbucketProjectKey}/repos/${repositorySlug}/browse/pipeline_config.groovy?ref=master"
                 // => JTE
             // 2. Check for Jenkinsfile
                 // => Jenkins classic
@@ -264,7 +261,7 @@ if (gitlabToken) {
             }
             catch(Exception e) {
                 println e
-                println "JTE pipeline_config.groovy not found in ${project}. Checking for Jenkinsfile...."
+                println "🤬 JTE pipeline_config.groovy not found in ${project} 👹. Checking for Jenkinsfile...."
             }
 
             try {
@@ -281,7 +278,7 @@ if (gitlabToken) {
             }
             catch(Exception e) {
                 println e
-                println "skipping project ${repositorySlug} because it has no Jenkinsfile \n"
+                println "🤬 Skipping project ${repositorySlug} because it has no Jenkinsfile 👹\n"
             }
         }
     } catch(Exception e) {
