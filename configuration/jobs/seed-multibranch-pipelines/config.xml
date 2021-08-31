@@ -72,8 +72,8 @@ def githubProjects = githubOrg ? new URL("${githubHost}/orgs/${githubAccount}/re
 
 // BITBUCKET
 def bitbucketHost = System.getenv("BITBUCKET_HOST") ?: "https://bitbucket.org/repo"
-def bitbucketUser = System.getenv("BITBUCKET_USER")
-def bitbucketPassword = System.getenv("BITBUCKET_PASSWORD")
+def bitbucketUser = System.getenv("BITBUCKET_API_USER")
+def bitbucketPassword = System.getenv("BITBUCKET_API_PASSWORD")
 def bitbucketProjectKey = System.getenv("BITBUCKET_PROJECT_KEY") ?: "rht-labs"
 def bitbucketProjectsApi = new URL("${bitbucketHost}/rest/api/1.0/projects/${bitbucketProjectKey}/repos?limit=100")
 
