@@ -173,3 +173,4 @@ pipeline-input-step:2.12
 jquery-detached:1.2.1
 build-monitor-plugin:1.12+build.201809061734
 github-branch-source:2.11.1
+ssh-agent:1.23
